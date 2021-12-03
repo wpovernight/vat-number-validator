@@ -1,29 +1,22 @@
 <?php
+namespace WPO\Component\VatNumberValidator\Tests;
 
-/*
- * (c) Antal Áron <antalaron@antalaron.hu>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+use WPO\Component\VatNumberValidator\VatNumberValidator;
+use PHPUnit\Framework\TestCase;
 
-namespace Antalaron\Component\VatNumberValidator\Tests;
-
-use Antalaron\Component\VatNumberValidator\VatNumber;
-use Antalaron\Component\VatNumberValidator\VatNumberValidator;
-
-class VatNumberValidatorTest extends AbstractConstraintValidatorTest
+class ValidatorTest extends TestCase
 {
-    protected function createValidator()
+
+    protected $validator;
+
+    protected function setUp(): void
     {
-        return new VatNumberValidator();
+        $this->validator = new VatNumberValidator();
     }
 
     public function testNullIsValid()
     {
-        $this->validator->validate(null, new VatNumber());
-
-        $this->assertNoViolation();
+        $this->assertTrue($this->validator->validate(null));
     }
 
     /**
@@ -31,13 +24,10 @@ class VatNumberValidatorTest extends AbstractConstraintValidatorTest
      */
     public function testVatNumbers($vatNumber, $valid, $shouldWorkOn32bit = true)
     {
-        $this->validator->validate($vatNumber, new VatNumber());
-
-        if ($valid || (4 === PHP_INT_SIZE && !$shouldWorkOn32bit)) {
-            $this->assertNoViolation();
+        if ( 4 === PHP_INT_SIZE && !$shouldWorkOn32bit ) {
+            $this->markTestSkipped("{$vatNumber} can not be validated on 32bit");
         } else {
-            $this->buildViolation(VatNumber::MESSAGE)
-                ->assertRaised();
+            $this->assertEquals( $valid, $this->validator->validate($vatNumber));
         }
     }
 
@@ -2123,45 +2113,5 @@ class VatNumberValidatorTest extends AbstractConstraintValidatorTest
             ['SK5407062531', false],
             ['SK7020001680', false, false],
         ];
-    }
-
-    public function testWithoutExtraVat()
-    {
-        $this->validator->validate('11316385-2-18', new VatNumber());
-        $this->buildViolation(VatNumber::MESSAGE)
-            ->assertRaised();
-    }
-
-    public function testExtraVat()
-    {
-        $this->validator->validate('11316385-2-18', new VatNumber(['extraVat' => function ($number) {
-            if (0 === preg_match('/^(\d{11})$/', $number)) {
-                return false;
-            }
-
-            $total = 0;
-            $multipliers = [9, 7, 3, 1, 9, 7, 3];
-
-            for ($i = 0; $i < 7; ++$i) {
-                $total += (int) $number[$i] * $multipliers[$i];
-            }
-
-            $total = 10 - ($total % 10);
-            if (10 === $total) {
-                $total = 0;
-            }
-
-            return $total === (int) $number[7];
-        }]));
-
-        $this->assertNoViolation();
-    }
-
-    /**
-     * @expectedException \Symfony\Component\Validator\Exception\ConstraintDefinitionException
-     */
-    public function testInvalidExtraVat()
-    {
-        $this->validator->validate('11316385-2-18', new VatNumber(['extraVat' => new \stdClass()]));
     }
 }

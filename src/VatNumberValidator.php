@@ -1,23 +1,10 @@
 <?php
-
-/*
- * (c) Antal Áron <antalaron@antalaron.hu>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
-namespace Antalaron\Component\VatNumberValidator;
-
-use Symfony\Component\Validator\Constraint;
-use Symfony\Component\Validator\ConstraintValidator;
+namespace WPO\Component\VatNumberValidator;
 
 /**
  * Validates a VAT number.
- *
- * @author Antal Áron <antalaron@antalaron.hu>
  */
-class VatNumberValidator extends ConstraintValidator
+class VatNumberValidator
 {
     /**
      * VAT regex.
@@ -82,10 +69,10 @@ class VatNumberValidator extends ConstraintValidator
     /**
      * {@inheritdoc}
      */
-    public function validate($value, Constraint $constraint)
+    public function validate($value)
     {
         if (null === $value || '' === $value) {
-            return;
+            return true;
         }
         
         //stored original VAT
@@ -93,11 +80,6 @@ class VatNumberValidator extends ConstraintValidator
 
         // Uppercase, remove spaces etc. from the VAT number to help validation
         $value = preg_replace('/(\s|-|\.)+/', '', strtoupper($value));
-
-        // Check user callable first
-        if (null !== $constraint->extraVat && call_user_func($constraint->extraVat, $value)) {
-            return;
-        }
 
         // Use only the expressions for the given country code
         $schemes = preg_grep('/^\/\^\('.preg_quote(substr($value, 0, 2), '/').'/', $this->schemes);
@@ -111,18 +93,13 @@ class VatNumberValidator extends ConstraintValidator
                 // Call the appropriate country VAT validation routine depending,
                 // on the country code (if the method exists)
                 $method = $match[1].'check';
-                if ($this->$method($match[2])) {
-                    return;
-                }
-
-                // Having processed the number, we break from the loop
-                break;
+                return $this->$method($match[2]);
             }
         }
 
-        // If we reached this point, it is invalid
-        $this->context->buildViolation($constraint->message)
-            ->addViolation();
+        // If we reached this point, we haven't matched the supplied VAT number
+        // with any of the known formats, so it is invalid
+        return false;
     }
 
     /**

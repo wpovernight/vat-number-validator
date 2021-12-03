@@ -1,17 +1,18 @@
 {
-    "name": "antalaron/vat-number-validator",
+    "name": "wpovernight/vat-number-validator",
     "description": "PHP library to validate VAT numbers",
     "type": "library",
     "license": "MIT",
     "authors": [
         {
+            "name": "Ewout Fernhout",
+            "email": "info@drwoo.nl"
+        },
+        {
             "name": "Antal Áron",
             "email": "antalaron@antalaron.hu"
         }
     ],
-    "require": {
-        "symfony/validator": "^2.8|^3.0|^4.0|^5.0"
-    },
     "require-dev": {
         "phpunit/phpunit": "*"
     },
@@ -20,17 +21,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Antalaron\\Component\\VatNumberValidator\\": "src/"
+            "WPO\\Component\\VatNumberValidator\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Antalaron\\Component\\VatNumberValidator\\Tests\\": "tests/Tests/"
-        }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.1.x-dev"
+            "WPO\\Component\\VatNumberValidator\\Tests\\": "tests/Unit/"
         }
     },
     "minimum-stability": "dev",
